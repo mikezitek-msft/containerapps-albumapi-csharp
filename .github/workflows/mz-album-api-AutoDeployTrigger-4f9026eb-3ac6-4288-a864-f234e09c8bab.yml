@@ -1,0 +1,42 @@
+name: Trigger auto deployment for mz-album-api
+
+# When this action will be executed
+on:
+  # Automatically trigger it when detected changes in repo
+  push:
+    branches: 
+      [ main ]
+    paths:
+    - 'src/**'
+    - '.github/workflows/mz-album-api-AutoDeployTrigger-4f9026eb-3ac6-4288-a864-f234e09c8bab.yml'
+
+  # Allow mannually trigger 
+  workflow_dispatch:
+      
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout to the branch
+        uses: actions/checkout@v2
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.MZALBUMAPI_AZURE_CREDENTIALS }}
+
+      - name: Build and push container image to registry
+        uses: azure/container-apps-deploy-action@v1
+        with:
+          appSourcePath: ${{ github.workspace }}/src 
+          registryUrl: cae7a3f18d7cacr.azurecr.io
+          registryUsername: ${{ secrets.MZALBUMAPI_REGISTRY_USERNAME }}
+          registryPassword: ${{ secrets.MZALBUMAPI_REGISTRY_PASSWORD }}
+          containerAppName: mz-album-api
+          resourceGroup: mz-rg-containers
+          imageToBuild: cae7a3f18d7cacr.azurecr.io/mz-album-api:${{ github.sha }}
+          dockerfilePath: Dockerfile
+
+     
+
